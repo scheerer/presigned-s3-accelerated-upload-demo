@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en-US">
+    <head>
+        <title>BlendedSoftware - Presigned S3 accelerated bucket uploads</title>
+        <link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css" />
+    </head>
+    <body>
+        <div class="container"><br/>
+            <div class="form-group upload-file">
+                <input type="file" class="form-control-file upload-file-input" id="uploadFile">
+                <label class="upload-file-label" for="uploadFile">Choose file</label>
+            </div>
+            <button id="uploadSubmit" type="submit" class="btn btn-primary">Submit</button>
+        </div>
+
+
+        <script src="/webjars/jquery/jquery.min.js"></script>
+        <script src="/webjars/bootstrap/js/bootstrap.min.js"></script>
+        <script src="/webjars/axios/dist/axios.js"></script>
+        <script>
+            $('.upload-file-input').on('change', () => {
+                const fileName = $(this).val().split('\\').pop();
+                $(this).siblings('.upload-file-label').addClass('selected').html(fileName);
+            });
+
+            $('#uploadSubmit').on('click', () => {
+                const file = $('#uploadFile')[0].files[0];
+
+                let startTime = new Date().getTime();
+                axios.get(`/signedUploadUrls?fileName=${file.name}`)
+                    .then((response) => {
+                        const signedUrl = response.data.urlWithoutAcceleration.url;
+                        const options = {
+                            headers: {
+                                'Access-Control-Allow-Origin': '*',
+                                'Content-Type': file.type
+                            }
+                        };
+
+                        console.log("s3 request items:", [signedUrl, options, file]);
+                        //return {};
+                        startTime = new Date().getTime();
+                        return axios.put(signedUrl, file, options)
+                            .then((s3PutResponse) => response); // put original response along
+                    })
+                    .then((response) => {
+                        const endTime = new Date().getTime();
+                        const message = `Upload without acceleration: ${endTime - startTime} ms`;
+                        console.log(message);
+
+                        const signedUrl = response.data.urlWithAcceleration.url;
+                        const options = {
+                            headers: {
+                                'Access-Control-Allow-Origin': '*',
+                                'Content-Type': file.type
+                            }
+                        };
+
+                        console.log("s3 request items:", [signedUrl, options, file]);
+
+                        startTime = new Date().getTime();
+                        return axios.put(signedUrl, file, options);
+                    })
+                    .then((response) => {
+                        const endTime = new Date().getTime();
+                        const message = `Upload with acceleration: ${endTime - startTime} ms`;
+                        console.log(message);
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                    })
+                    .then(() => {
+                        // always executed
+                    });
+            });
+        </script>
+    </body>
+</html>
