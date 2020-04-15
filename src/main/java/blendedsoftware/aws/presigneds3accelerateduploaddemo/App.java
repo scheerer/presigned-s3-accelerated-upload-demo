@@ -71,9 +71,9 @@ public class App {
 				StaticCredentialsProvider.create(AwsBasicCredentials.create(awsAccessKey, awsSecretKey));
 
 		S3Presigner s3Presigner =
-				ConfigurableS3SdkPresigner.builder()
+				S3Presigner.builder()
 						.credentialsProvider(credentialsProvider)
-						.s3Configuration(configuration)
+						.serviceConfiguration(configuration)
 						.region(Region.of(bucketRegion))
 						.build();
 

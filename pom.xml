@@ -16,7 +16,7 @@
 
 	<properties>
 		<java.version>11</java.version>
-		<aws-sdk.version>2.10.89</aws-sdk.version>
+		<aws-sdk.version>2.11.9</aws-sdk.version>
 
 		<!-- Frontend deps -->
 		<axios.version>0.19.2</axios.version>
